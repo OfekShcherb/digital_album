@@ -29,6 +29,26 @@ const validateItem = (json) => {
   return null;
 };
 
+const validateDataForItem = (item, data) => {
+  const [key, value] = Object.entries(data)[0];
+  if (key === "type") {
+    return "Can't update type";
+  }
+  if (key === "url" && !value) {
+    return "invalid value: empty url";
+  }
+
+  if (key === "color" && !value) {
+    return "invalid value: empty color";
+  }
+
+  if (key === "shapeType" && !value) {
+    return "invalid value: empty shapeType";
+  }
+
+  return null;
+};
 module.exports = {
   validateItem,
+  validateDataForItem,
 };

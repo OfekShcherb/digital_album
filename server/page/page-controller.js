@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
 const Page = require("./page-model");
 const Album = require("../album/album-model");
-const { validateItem } = require("../validators/item-validator");
+const {
+  validateItem,
+  validateDataForItem,
+} = require("../validators/item-validator");
 
 const createPage = async (req, res) => {
   const session = await mongoose.startSession();
@@ -77,7 +80,42 @@ const addItem = async (req, res) => {
     res.status(500).json({ success: false, msg: "Internal Server Error" });
   }
 };
+
+const updateItem = async (req, res) => {
+  const { pageID, itemID } = req.params;
+  const updatedData = req.body;
+  const pageToUpdate = await Page.findById(pageID);
+  if (!pageToUpdate) {
+    return res.status(404).json({ success: false, msg: "Page not found" });
+  }
+
+  const itemToUpdate = await pageToUpdate.items.id(itemID);
+  if (!itemToUpdate) {
+    return res.status(404).json({ success: false, msg: "Item not found" });
+  }
+
+  const error = validateDataForItem(itemToUpdate, updatedData);
+  if (error) {
+    return res.status(400).json({ success: false, msg: error });
+  }
+
+  const [key, value] = Object.entries(updatedData)[0];
+  itemToUpdate[key] = value;
+
+  pageToUpdate
+    .save()
+    .then(() => res.status(200).json({ success: true, item: itemToUpdate }))
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        const error = Object.values(err.errors)[0].message;
+        return res.status(400).json({ success: false, msg: error });
+      }
+      res.status(500).json({ success: false, msg: "Internal Server Error" });
+    });
+};
+
 module.exports = {
   createPage,
   addItem,
+  updateItem,
 };
