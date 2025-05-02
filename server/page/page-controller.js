@@ -89,7 +89,7 @@ const updateItem = async (req, res) => {
     return res.status(404).json({ success: false, msg: "Page not found" });
   }
 
-  const itemToUpdate = await pageToUpdate.items.id(itemID);
+  const itemToUpdate = pageToUpdate.items.id(itemID);
   if (!itemToUpdate) {
     return res.status(404).json({ success: false, msg: "Item not found" });
   }
@@ -114,8 +114,32 @@ const updateItem = async (req, res) => {
     });
 };
 
+const deleteItem = async (req, res) => {
+  const { pageID, itemID } = req.params;
+  const pageToUpdate = await Page.findById(pageID);
+  if (!pageToUpdate) {
+    return res.status(404).json({ success: false, msg: "Page not found" });
+  }
+
+  const itemToDelete = pageToUpdate.items.id(itemID);
+  if (!itemToDelete) {
+    return res.status(404).json({ success: false, msg: "Item not found" });
+  }
+  pageToUpdate.items.pull({ _id: itemID });
+
+  pageToUpdate
+    .save()
+    .then(() => {
+      res.status(200).json({ success: true, page: pageToUpdate });
+    })
+    .catch((error) => {
+      res.status(500).json({ success: false, msg: "Internal Server Error" });
+    });
+};
+
 module.exports = {
   createPage,
   addItem,
   updateItem,
+  deleteItem,
 };
