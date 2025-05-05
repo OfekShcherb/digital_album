@@ -1,12 +1,17 @@
 const Album = require("./album-model");
+const Page = require("../page/page-model");
 
 const getAlbum = async (req, res) => {
   const { id } = req.params;
   await Album.findOne({ albumID: id })
-    .then((album) => {
+    .then(async (album) => {
       if (!album) {
         res.status(404).json({ success: false, msg: "Album not found" });
       } else {
+        album.pages = await Promise.all(
+          album.pages.map((id) => Page.findById(id).select("items"))
+        );
+
         res.status(200).json({ success: true, data: album });
       }
     })
