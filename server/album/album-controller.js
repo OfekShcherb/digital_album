@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Album = require("./album-model");
 const Page = require("../page/page-model");
 
@@ -39,7 +40,30 @@ const createAlbum = async (req, res) => {
     });
 };
 
+const deleteAlbum = async (req, res) => {
+  const session = await mongoose.startSession();
+  const { id } = req.params;
+  const albumToDelete = await Album.findOne({ albumID: id });
+  if (!albumToDelete) {
+    return res.status(404).json({ success: false, msg: "Album not found" });
+  }
+  try {
+    await session.withTransaction(async () => {
+      await Page.deleteMany({ _id: { $in: albumToDelete.pages } });
+      console.log("Deleted pages");
+      await albumToDelete.deleteOne();
+      console.log("Deleted album");
+      res.status(200).json({ success: true, id: albumToDelete._id });
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "Internal Server Error" });
+  } finally {
+    session.endSession();
+  }
+};
+
 module.exports = {
   getAlbum,
   createAlbum,
+  deleteAlbum,
 };
