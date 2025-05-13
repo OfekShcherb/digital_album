@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Album = require("./album-model");
 const Page = require("../page/page-model");
+const { validateDataForAlbum } = require("../validators/album-validator");
 
 const getAlbum = async (req, res) => {
   const { id } = req.params;
@@ -59,8 +60,37 @@ const deleteAlbum = async (req, res) => {
   }
 };
 
+const updateAlbum = async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+  const albumToUpdate = await Album.findById(id);
+  if (!albumToUpdate) {
+    return res.status(404).json({ success: false, msg: "Album not found" });
+  }
+
+  const error = validateDataForAlbum(updatedData);
+  if (error) {
+    return res.status(400).json({ success: false, msg: error });
+  }
+
+  const [key, value] = Object.entries(updatedData)[0];
+  albumToUpdate[key] = value;
+
+  albumToUpdate
+    .save()
+    .then(() => res.status(200).json({ success: true, album: albumToUpdate }))
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+        const error = Object.values(err.errors)[0].message;
+        return res.status(400).json({ success: false, msg: error });
+      }
+      res.status(500).json({ success: false, msg: "Internal Server Error" });
+    });
+};
+
 module.exports = {
   getAlbum,
   createAlbum,
   deleteAlbum,
+  updateAlbum,
 };
