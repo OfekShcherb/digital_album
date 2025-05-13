@@ -18,7 +18,7 @@ const mediaItemSchema = new mongoose.Schema({
 });
 
 const pageSchema = new mongoose.Schema({
-  albumID: { type: Number, required: true },
+  albumID: { type: String, required: true },
   items: [mediaItemSchema],
 });
 

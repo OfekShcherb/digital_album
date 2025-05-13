@@ -4,7 +4,7 @@ const Page = require("../page/page-model");
 
 const getAlbum = async (req, res) => {
   const { id } = req.params;
-  await Album.findOne({ albumID: id })
+  await Album.findById(id)
     .then(async (album) => {
       if (!album) {
         res.status(404).json({ success: false, msg: "Album not found" });
@@ -31,9 +31,7 @@ const createAlbum = async (req, res) => {
 
   await Album.create({ title: title, pages: [] })
     .then((newAlbum) => {
-      res
-        .status(201)
-        .json({ success: true, title: title, id: newAlbum.albumID });
+      res.status(201).json({ success: true, title: title, id: newAlbum._id });
     })
     .catch((err) => {
       res.status(500).json({ success: false, msg: "Internal Server Error" });
@@ -43,17 +41,16 @@ const createAlbum = async (req, res) => {
 const deleteAlbum = async (req, res) => {
   const session = await mongoose.startSession();
   const { id } = req.params;
-  const albumToDelete = await Album.findOne({ albumID: id });
+  const albumToDelete = await Album.findOne({ _id: id });
   if (!albumToDelete) {
     return res.status(404).json({ success: false, msg: "Album not found" });
   }
   try {
+    const albumToDeleteID = albumToDelete._id;
     await session.withTransaction(async () => {
       await Page.deleteMany({ _id: { $in: albumToDelete.pages } });
-      console.log("Deleted pages");
       await albumToDelete.deleteOne();
-      console.log("Deleted album");
-      res.status(200).json({ success: true, id: albumToDelete._id });
+      res.status(200).json({ success: true, id: albumToDeleteID });
     });
   } catch (err) {
     res.status(500).json({ success: false, msg: "Internal Server Error" });
