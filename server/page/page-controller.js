@@ -20,8 +20,8 @@ const createPage = async (req, res) => {
       const [newPage] = await Page.create([{ albumID: albumID, items: [] }], {
         session,
       });
-      const updatedAlbum = await Album.findOneAndUpdate(
-        { albumID: albumID },
+      const updatedAlbum = await Album.findByIdAndUpdate(
+        albumID,
         { $push: { pages: newPage._id } },
         { new: true, session }
       );
