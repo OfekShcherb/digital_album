@@ -34,8 +34,10 @@ const validateDataForItem = (item, data) => {
   if (key === "type") {
     return "Can't update type";
   }
-  if (key === "url" && !value) {
-    return "invalid value: empty url";
+  if (item.type === "image" || item.type === "video" || item.type === "audio") {
+    if (key === "url" && !value) {
+      return "invalid value: empty url";
+    }
   }
 
   if (key === "color" && !value) {
